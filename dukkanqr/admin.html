@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yönetim Paneli — DukkanQR</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <script>
+        if (sessionStorage.getItem('dukkanqr_auth') !== 'true') {
+            window.location.replace('login.html');
+        }
+    </script>
+</head>
+
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-img">
+                <img id="sidebar-logo-img" src="" alt="Logo" style="display:none">
+                <span id="sidebar-logo-emoji">🏪</span>
+            </div>
+            <div class="sidebar-logo-text">
+                <h2 id="sidebar-shop-name">DukkanQR</h2>
+                <p>Yönetim Paneli</p>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-label">Menü</div>
+            <div class="nav-item active" data-section="dashboard">
+                <span class="nav-icon">📊</span> Genel Bakış
+            </div>
+            <div class="nav-item" data-section="categories">
+                <span class="nav-icon">📂</span> Kategoriler
+            </div>
+            <div class="nav-item" data-section="products">
+                <span class="nav-icon">🍽️</span> Ürünler
+            </div>
+            <div class="nav-item" data-section="about">
+                <span class="nav-icon">📍</span> Hakkımızda
+            </div>
+            <div class="nav-label" style="margin-top:16px">Sistem</div>
+            <div class="nav-item" data-section="settings">
+                <span class="nav-icon">⚙️</span> Ayarlar
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="index.html">
+                <span>👁️</span> Müşteri Menüsünü Gör
+            </a>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN ===== -->
+    <main class="admin-main">
+        <!-- Top Bar -->
+        <div class="admin-topbar">
+            <div style="display:flex;align-items:center;gap:12px">
+                <button class="hamburger" id="hamburger">☰</button>
+                <span id="topbar-title" class="topbar-title">Genel Bakış</span>
+            </div>
+            <div class="topbar-actions">
+                <a href="index.html" class="btn btn-ghost btn-sm" target="_blank">👁️ Menüyü Gör</a>
+                <button class="btn btn-danger btn-sm" onclick="logout()">🚪 Çıkış</button>
+            </div>
+        </div>
+
+        <div class="admin-content">
+
+            <!-- ========= DASHBOARD ========= -->
+            <section class="admin-section active" id="section-dashboard">
+                <div class="section-header">
+                    <div>
+                        <h2>Genel Bakış</h2>
+                        <p>Menünüzün özet durumu</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon aqua">📂</div>
+                        <div>
+                            <div class="stat-value" id="stat-categories">0</div>
+                            <div class="stat-label">Kategori</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue">🍽️</div>
+                        <div>
+                            <div class="stat-value" id="stat-products">0</div>
+                            <div class="stat-label">Toplam Ürün</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">✅</div>
+                        <div>
+                            <div class="stat-value" id="stat-available">0</div>
+                            <div class="stat-label">Mevcut Ürün</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">⛔</div>
+                        <div>
+                            <div class="stat-value" id="stat-unavailable">0</div>
+                            <div class="stat-label">Mevcut Değil</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple">👥</div>
+                        <div>
+                            <div class="stat-value" id="stat-visitors">0</div>
+                            <div class="stat-label">Toplam Ziyaretçi</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick actions -->
+                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px">
+                    <button class="btn btn-primary" onclick="activateSection('categories');openAddCategory()">
+                        ＋ Yeni Kategori
+                    </button>
+                    <button class="btn btn-primary" onclick="activateSection('products');openAddProduct()">
+                        ＋ Yeni Ürün
+                    </button>
+                    <a href="index.html" class="btn btn-ghost" target="_blank">👁️ Menüyü Önizle</a>
+                </div>
+
+                <!-- Recent products -->
+                <div class="section-header" style="margin-bottom:12px">
+                    <h2 style="font-size:1rem">Son Ürünler</h2>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ürün</th>
+                                <th>Kategori</th>
+                                <th>Fiyat</th>
+                                <th>Durum</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dash-product-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ========= CATEGORIES ========= -->
+            <section class="admin-section" id="section-categories">
+                <div class="section-header">
+                    <div>
+                        <h2>Kategoriler</h2>
+                        <p>Menü kategorilerini yönetin</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddCategory()">＋ Yeni Kategori</button>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>İkon</th>
+                                <th>Kategori Adı</th>
+                                <th>Ürün Sayısı</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="category-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ========= PRODUCTS ========= -->
+            <section class="admin-section" id="section-products">
+                <div class="section-header">
+                    <div>
+                        <h2>Ürünler</h2>
+                        <p>Menü ürünlerini yönetin</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddProduct()">＋ Yeni Ürün</button>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ürün</th>
+                                <th>Kategori</th>
+                                <th>Fiyat</th>
+                                <th>Durum</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ========= ABOUT US ========= -->
+            <section class="admin-section" id="section-about">
+                <div class="section-header">
+                    <div>
+                        <h2>Hakkımızda</h2>
+                        <p>Müşteri menüsündeki Hakkımızda sayfasını düzenleyin</p>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>📝 Dükkan Hakkında Bilgi</h3>
+                    <div class="form-group">
+                        <label>Açıklama</label>
+                        <textarea id="about-description-input" rows="5"
+                            placeholder="Dükkanınız hakkında kısa bir yazı girin..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveAboutSettings()">💾 Kaydet</button>
+                </div>
+
+                <div class="settings-card">
+                    <h3>📞 İletişim Bilgileri</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📍 Adres</label>
+                            <input type="text" id="about-address-input" placeholder="Örn: Kadıköy, İstanbul">
+                        </div>
+                        <div class="form-group">
+                            <label>📞 Telefon</label>
+                            <input type="tel" id="about-phone-input" placeholder="Örn: 0212 000 00 00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>🌐 Web Sitesi</label>
+                        <input type="url" id="about-website-input" placeholder="Örn: www.dukkanim.com">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveAboutSettings()">💾 Kaydet</button>
+                </div>
+
+                <div class="settings-card">
+                    <h3>🗺️ Google Haritalar Embed</h3>
+                    <p style="color:var(--text-muted);font-size:0.84rem;margin-bottom:14px;line-height:1.6">
+                        Google Haritalar'da dükkanınızı bulun → <strong>Paylaş</strong> → <strong>Harita
+                            Yerleştir</strong> → iframe kodunu buraya yapıştırın.
+                    </p>
+                    <div class="form-group">
+                        <label>iframe Embed Kodu</label>
+                        <textarea id="about-map-input" rows="4"
+                            placeholder='&lt;iframe src="https://www.google.com/maps/embed?..." ...&gt;&lt;/iframe&gt;'></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveAboutSettings()">💾 Kaydet</button>
+                </div>
+            </section>
+
+            <!-- ========= SETTINGS ========= -->
+            <section class="admin-section" id="section-settings">
+                <div class="section-header">
+                    <div>
+                        <h2>Ayarlar</h2>
+                        <p>Dükkan bilgilerini ve görünümü düzenleyin</p>
+                    </div>
+                </div>
+
+                <!-- Shop Info -->
+                <div class="settings-card">
+                    <h3>🏪 Dükkan Bilgileri</h3>
+                    <div class="form-group">
+                        <label>Dükkan Adı</label>
+                        <input type="text" id="setting-shop-name" placeholder="Dükkanınızın adı">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveSettings()">💾 Kaydet</button>
+                </div>
+
+                <!-- Logo -->
+                <div class="settings-card">
+                    <h3>🖼️ Dükkan Logosu</h3>
+                    <div class="logo-upload-preview" id="settings-logo-preview">
+                        <img id="settings-logo-img" src="" alt="Logo" style="display:none">
+                        <span id="settings-logo-emoji">🏪</span>
+                        <div class="logo-overlay">📷</div>
+                    </div>
+                    <input type="file" id="logo-file-input" accept="image/*" style="display:none">
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <button class="btn btn-ghost" onclick="document.getElementById('logo-file-input').click()">
+                            📷 Logo Yükle
+                        </button>
+                        <button class="btn btn-danger" onclick="removeLogo()">🗑️ Kaldır</button>
+                        <button class="btn btn-primary" onclick="saveSettings()">💾 Kaydet</button>
+                    </div>
+                    <p style="color:var(--text-muted);font-size:0.8rem;margin-top:10px">
+                        PNG, JPG veya GIF formatında yükleyebilirsiniz.
+                    </p>
+                </div>
+
+                <!-- EmailJS -->
+                <div class="settings-card">
+                    <h3>📧 E-posta Giriş Ayarları (EmailJS)</h3>
+                    <p style="color:var(--text-muted);font-size:0.84rem;margin-bottom:16px;line-height:1.6">
+                        Gerçek e-posta doğrulaması için <a href="https://www.emailjs.com" target="_blank"
+                            style="color:var(--primary)">emailjs.com</a>'da ücretsiz hesap oluşturun.
+                    </p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Public Key</label>
+                            <input type="text" id="ejs-public-key" placeholder="abc123...">
+                        </div>
+                        <div class="form-group">
+                            <label>Service ID</label>
+                            <input type="text" id="ejs-service-id" placeholder="service_xxx">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Template ID</label>
+                            <input type="text" id="ejs-template-id" placeholder="template_xxx">
+                        </div>
+                        <div class="form-group">
+                            <label>Admin E-posta</label>
+                            <input type="email" id="ejs-admin-email" placeholder="admin@gmail.com">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveEmailjsSettings()">💾 EmailJS Ayarlarını
+                        Kaydet</button>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="settings-card" style="border-color:rgba(239,68,68,0.2)">
+                    <h3 style="color:var(--danger)">⚠️ Tehlikeli Bölge</h3>
+                    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px">
+                        Tüm verileri fabrika ayarlarına sıfırlar. Bu işlem geri alınamaz!
+                    </p>
+                    <button class="btn btn-danger" onclick="resetToDefaults()">🔄 Tümünü Sıfırla</button>
+                </div>
+            </section>
+
+        </div><!-- /admin-content -->
+    </main><!-- /admin-main -->
+
+    <!-- ========= CATEGORY MODAL ========= -->
+    <div class="modal-overlay" id="cat-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="cat-modal-title">Yeni Kategori</h3>
+                <button class="modal-close" onclick="closeModal('cat-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="cat-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Kategori Adı *</label>
+                            <input type="text" id="cat-name" placeholder="Örn: Burgerler" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Emoji İkon</label>
+                            <input type="text" id="cat-icon" placeholder="Örn: 🍔" maxlength="4">
+                        </div>
+                    </div>
+                    <div class="form-footer">
+                        <button type="button" class="btn btn-ghost" onclick="closeModal('cat-modal')">İptal</button>
+                        <button type="submit" class="btn btn-primary">💾 Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========= PRODUCT MODAL ========= -->
+    <div class="modal-overlay" id="product-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="product-modal-title">Yeni Ürün</h3>
+                <button class="modal-close" onclick="closeModal('product-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="product-form">
+                    <div class="form-group">
+                        <label>Kategori *</label>
+                        <select id="product-category" required>
+                            <option value="">Kategori Seçin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ürün Adı *</label>
+                        <input type="text" id="product-name" placeholder="Ürün adı" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Açıklama</label>
+                        <textarea id="product-desc" placeholder="Ürün açıklaması (isteğe bağlı)"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>1 Porsiyon Fiyatı (₺) *</label>
+                            <input type="number" id="price-1-input" placeholder="0.00" min="0" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>1.5 Porsiyon Fiyatı (₺)</label>
+                            <input type="number" id="price-1-5-input" placeholder="0.00" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:4px">
+                        <label
+                            style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:0.9rem">
+                            <input type="checkbox" id="product-available" checked
+                                style="width:auto;accent-color:var(--primary)">
+                            Ürün mevcut
+                        </label>
+                    </div>
+            </div>
+            <div class="form-group">
+                <label>Ürün Fotoğrafı</label>
+                <div class="img-upload-area">
+                    <input type="file" id="product-image-file" accept="image/*">
+                    <div class="img-upload-label">
+                        <div class="upload-icon">📷</div>
+                        <p><strong>Fotoğraf yüklemek için tıklayın</strong></p>
+                        <p>PNG, JPG, WEBP — maks. 5 MB</p>
+                    </div>
+                </div>
+                <div class="preview-img-wrap" id="img-preview-wrap">
+                    <img id="img-preview" src="" alt="Önizleme">
+                    <button type="button" class="remove-img" onclick="hideImagePreview()">✕</button>
+                </div>
+            </div>
+            <div class="form-footer">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('product-modal')">İptal</button>
+                <button type="submit" class="btn btn-primary">💾 Kaydet</button>
+            </div>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        // Logout
+        function logout() {
+            sessionStorage.removeItem('dukkanqr_auth');
+            window.location.replace('login.html');
+        }
+
+        // Update sidebar shop name dynamically
+        document.getElementById('sidebar-shop-name').textContent = store.shopName;
+        // Render recent products in dashboard
+        (function renderDashRecent() {
+            const tbody = document.getElementById('dash-product-body');
+            const recent = [...store.products].reverse().slice(0, 8);
+            recent.forEach(product => {
+                const cat = store.categories.find(c => c.id === product.categoryId);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+          <td>
+            <div class="product-row-info">
+              <div class="tbl-img" style="font-size:1.1rem">${product.image ? `<img src="${product.image}" alt="">` : '🍽️'}</div>
+              <div class="product-row-text">
+                <div class="pname">${product.name}</div>
+              </div>
+            </div>
+          </td>
+          <td>${cat?.name || '—'}</td>
+          <td><strong style="color:var(--primary)">${product.price} ₺</strong></td>
+          <td>
+            <span class="badge ${product.available !== false ? 'badge-green' : 'badge-red'}">
+              ${product.available !== false ? 'Mevcut' : 'Mevcut Değil'}
+            </span>
+          </td>`;
+                tbody.appendChild(tr);
+            });
+
+            // Update sidebar logo if available
+            if (store.shopLogo) {
+                document.getElementById('sidebar-logo-img').src = store.shopLogo;
+                document.getElementById('sidebar-logo-img').style.display = 'block';
+                document.getElementById('sidebar-logo-emoji').style.display = 'none';
+            }
+        })();
+
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+    <span id="current-year" style="display:none"></span>
+</body>
+
+</html>
